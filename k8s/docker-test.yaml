@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-test-deployment
+  labels:
+    app: docker-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: docker-test
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 34%
+      maxUnavailable: 34%
+  template:
+    metadata:
+      name: docker-test
+      labels:
+        app: docker-test
+    spec:
+      containers:
+      - name: docker-test
+        image: docker_test:latest
+        imagePullPolicy: Never
+        env:
+          - name: APP_HOST
+            value: el-kube.com
+          - name: DATABASE_URL
+            value: ecto://alma:korte@db/el_kube_prod
+          - name: HOSTNAME
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: PORT
+            value: "4000"
+          - name: RELEASE_COOKIE
+            value: el-kube-secret-cookie
+          - name: SECRET_KEY_BASE
+            value: R8hgiR5Cew6GeLpdfghjdfghjkghjkghytgzEEw94b9sz34WIKk8ZzTab2xihmI65kPEWyqYyO0
+          - name: SERVICE_NAME
+            value: docker-test.default.svc.cluster.local
+        resources: {}
+        securityContext:
+          privileged: false
+          procMount: Default
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
